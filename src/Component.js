@@ -150,6 +150,14 @@ class Component extends State {
 	}
 
 	/**
+	 * Getter logic for the element property.
+	 * @return {Element}
+	 */
+	get element() {
+		return this.elementVal_;
+	}
+
+	/**
 	 * Adds the listeners specified in the given object.
 	 * @param {Object} events
 	 * @protected
@@ -547,18 +555,26 @@ class Component extends State {
 	}
 
 	/**
-	 * Setter logic for element state key.
-	 * @param {string|Element} newVal
-	 * @param {Element} currentVal
-	 * @return {Element}
-	 * @protected
+	 * Setter logic for the element property.
+	 * @param {?string|Element} val
 	 */
-	setterElementFn_(newVal, currentVal) {
-		var element = newVal;
-		if (element) {
-			element = dom.toElement(newVal) || currentVal;
+	set element(val) {
+		if (!core.isElement(val) && !core.isString(val) && core.isDefAndNotNull(val)) {
+			return;
 		}
-		return element;
+
+		if (val) {
+			val = dom.toElement(val) || this.elementVal_;
+		}
+
+		if (this.elementVal_ !== val) {
+			var prev = this.elementVal_;
+			this.elementVal_ = val;
+			this.emit('elementChanged', {
+				prevVal: prev,
+				newVal: val
+			});
+		}
 	}
 
 	/**
@@ -646,16 +662,6 @@ class Component extends State {
 	}
 
 	/**
-	 * Validator logic for element state key.
-	 * @param {?string|Element} val
-	 * @return {boolean} True if val is a valid element.
-	 * @protected
-	 */
-	validatorElementFn_(val) {
-		return core.isElement(val) || core.isString(val) || !core.isDefAndNotNull(val);
-	}
-
-	/**
 	 * Validator logic for the `events` state key.
 	 * @param {Object} val
 	 * @return {boolean}
@@ -672,16 +678,6 @@ class Component extends State {
  * @static
  */
 Component.STATE = {
-	/**
-	 * Component element bounding box.
-	 * @type {Element}
-	 * @writeOnce
-	 */
-	element: {
-		setter: 'setterElementFn_',
-		validator: 'validatorElementFn_'
-	},
-
 	/**
 	 * CSS classes to be applied to the element.
 	 * @type {string}
@@ -742,7 +738,7 @@ Component.SYNC_UPDATES = false;
  * A list with state key names that will automatically be rejected as invalid.
  * @type {!Array<string>}
  */
-Component.INVALID_KEYS = ['components', 'wasRendered'];
+Component.INVALID_KEYS = ['components', 'element', 'wasRendered'];
 
 /**
  * Sets a prototype flag to easily determine if a given constructor is for
